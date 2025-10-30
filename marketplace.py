@@ -1,12 +1,10 @@
-class Usuario(): #Classe Abstrata de Usuário
+from abc import ABC, abstractmethod
+class Usuario(ABC): #Classe Abstrata de Usuário
     def __init__(self, nome, cpf, telefone):
         self.nome = nome
         self.cpf = cpf
         self.telefone = telefone
-        #Listas para serem adionados os instrutores e organizadores
-        self.instrutores = []
-        self.organizadores =[]
-
+     
 class Aluno(Usuario):
     def __init__(self, nome, cpf, telefone, curso, turma, matricula, pagamento):
         super().__init__(nome, cpf, telefone)
@@ -19,9 +17,34 @@ class Aluno(Usuario):
         return f"Nome: {self.nome} - CPF: {self.cpf} - Tel: {self.telefone} - Curso: {self.curso} - Turma: {self.turma} - Matrícula: {self.matricula} - Pagamento: {self.pagamento}"
 
 class Organizador(Usuario):
-    def __init__(self, nome, cpf, telefone, area):
+    def __init__(self, nome, cpf, telefone):
         super().__init__(nome, cpf, telefone)
-        self.area = area #area de atuacao
+
+    def criarCurso(self):
+        curso = input("Nome do Curso: ").upper()
+        preco = float(input("Preço do curso: "))
+        cargaHoraria = int(input("Carga Horaria: "))
+        turma = []
+        qtdTurma = int(input("Insira quantas turmas serão adicionadas inicialmente: "))
+        for i in range(qtdTurma):
+            turmaNome = input(f"Insira a {i+1}º turma: ")
+            turma.append(turmaNome)
+        cursoClass = Curso(curso, preco, cargaHoraria, turma)
+        cursoClass.criarCurso()
+
+    def cadastrarTurma(self):
+        turmasList = []
+        curso = input("Deseja cadastrar turmas em qual curso?: ").upper()
+        while Curso.percorrerCursos(curso) != True:
+            curso = input("Curso Inexistente. Insira um curso válido: ").upper()
+        qtdTurma = int(input("Insira quantas turmas você deseja cadastrar: "))
+        for i in range(qtdTurma):
+            turma = input(f"Insira a {i+1}ª turma: ")
+            turmasList.append(turma)
+        Curso.cadastrarTurmas(curso, turmasList)
+
+    def __str__(self):
+        return f"Nome: {self.nome} - CPF: {self.cpf} - Tel: {self.telefone}"
 
 class Instrutor(Usuario):
     def __init__(self, nome, cpf, telefone, curso, turma):
@@ -29,11 +52,15 @@ class Instrutor(Usuario):
         self.curso = curso
         self.turma = turma
 
+    def __str__(self):
+        return f"Nome: {self.nome} - CPF: {self.cpf} - Tel: {self.telefone} - Curso de Atuação: {self.curso} - Turma Vinculada: {self.turma}"
+  
+
 class Curso():
     listaCursos = ["CC", "ADS", "ENFERMAGEM"] #a lsita precisa ser declarada aqui pois do contrário, seria considerada uma instância da Classe, coisa q não é
     
     informacoesCursos = {
-        'CC': {
+        'CC': { 
             'Preco' : 1800,
             'Carga Horaria': 360,
             'Turmas' : ["A", "C"]
@@ -80,17 +107,22 @@ class Curso():
                 print(f"{chave} - {valor}")
         else:
             print("Curso não encontrado!")
-
-
-class Turma():
-    def __init__(self, dataInicio, instrutor, vagasQuantidade):
-        self.dataInicio = dataInicio
-        self.instrutor = instrutor
-        self.vagasQuantidade = vagasQuantidade
+        
+    def mostrarTurmas(cursoDesejado):
+        return Curso.informacoesCursos[cursoDesejado]['Turmas']
     
+    def cadastrarTurmas(curso, turmas):
+       turmasList = Curso.informacoesCursos[curso]['Turmas']
+       turmasList.extend(turmas)
+
+
 class Pagamento():
-    def __init__(self, aluno):
-        self.aluno = aluno
+    def __init__(self):
+        self.faturamento = []
+        
+        def processarPagamento(self):
+            print("Processando pagamento!")
+            print("Pagamento Efetuado")
 
 class Pix(Pagamento):
     def __init__(self, aluno, chavePix):
@@ -110,6 +142,8 @@ class Boleto(Pagamento):
 class Matricula():
     def __init__(self):
         self.matriculas = []
+        self.matriculasInstrutor = []
+        self.matriculasOrganizador = []
 
     def matricularAluno(self):
         matricula = ""
@@ -136,8 +170,16 @@ class Matricula():
         while Curso.percorrerCursos(curso) != True: #Laço para capturar erros do campo 'curso'
             Curso.mostrarCursos()
             curso = input("Curso Inexistente ou Inválido, Escolha um da presente lista: ").upper()
+        
+        print(Curso.mostrarTurmas(curso)) 
 
-        turma = input("Turma: ")
+        while True:
+            turma = input("Turma: ").upper()
+            if turma not in Curso.mostrarTurmas(curso):
+                print("Turma não encontrada! Selecione uma existente")
+                continue
+            break
+            
         i = 0
         while i < 6:
             matricula += cpf[i]
@@ -147,15 +189,54 @@ class Matricula():
         novoAluno = Aluno(alunoNome,cpf, telefone, curso, turma, matricula, pagamento)
         self.matriculas.append(novoAluno)
         print("Aluno Matriculado com sucesso!")
-    
 
-'''sistema = Matricula()
-sistema.matricularAluno()
-for aluno in sistema.matriculas:
-    print(aluno)'''
-Curso.mostrarInfoCurso('CC')
+    def cadastrarInstrutor(self):
+        instrutorNome = input("Nome do Instrutor: ")
 
-curso01 = Curso("Natação", 890.99, 480, ["A - Manhã, B - Tarde, C - Noite"])
-curso01.criarCurso()
-Curso.mostrarCursos()
-Curso.mostrarInfoCurso("Natação")
+        while True: #Laço para capturar erros do cpf
+            cpfInstrutor = input("CPF do Instrutor(Somente Números): ")
+            if not cpfInstrutor.isdigit():
+                print("O cpf deve conter apenas números!")
+                continue
+            if len(cpfInstrutor) != 11:
+                print("O CPF deve conter 11 números!")
+                continue
+            break
+        telInstrutor = input("Número de Telefone do Instrutor: ")
+        Curso.mostrarCursos()
+        cursoInstrutor = input("Insira o curso que o Instrutor leciona: ").upper()
+
+        while Curso.percorrerCursos(cursoInstrutor) != True: #Laço para capturar erros do campo 'curso'
+            Curso.mostrarCursos()
+            cursoInstrutor = input("Curso Inexistente ou Inválido, Escolha um da presente lista: ").upper()
+
+        
+        while True:
+            turmaInstrutor = input("Insira qual turma o instrutor vai se vincular: ").upper()
+            if turmaInstrutor not in Curso.mostrarTurmas(cursoInstrutor):
+                print("Turma não encontrada! Selecione uma existente")
+                continue
+            break
+        novoInstrutor = Instrutor(instrutorNome, cpfInstrutor, telInstrutor, cursoInstrutor, turmaInstrutor)
+        self.matriculasInstrutor.append(novoInstrutor)
+        print("Instrutor cadastrado com sucesso!")
+
+    def cadastrarOrganizador(self):
+        nomeOrganizador = input("Insira o nome do Organizador: ")
+
+        while True: #Laço para capturar erros do cpf
+            cpfOrganizador = input("CPF do Instrutor(Somente Números): ")
+            if not cpfOrganizador.isdigit():
+                print("O cpf deve conter apenas números!")
+                continue
+            if len(cpfOrganizador) != 11:
+                print("O CPF deve conter 11 números!")
+                continue
+            break
+        telOrganizador = input("Insira o número celular do organizador: ")
+
+        novoOrganizador = Organizador(nomeOrganizador, cpfOrganizador, telOrganizador)
+        self.cadastrarOrganizador.append(novoOrganizador)
+
+sistema = Matricula()
+sebastiao = Organizador("Sebastião", "71065600496", 81989489744)

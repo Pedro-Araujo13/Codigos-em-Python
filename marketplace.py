@@ -31,12 +31,39 @@ class Instrutor(Usuario):
 
 class Curso():
     listaCursos = ["CC", "ADS", "ENFERMAGEM"] #a lsita precisa ser declarada aqui pois do contrário, seria considerada uma instância da Classe, coisa q não é
+    
+    informacoesCursos = {
+        'CC': {
+            'Preco' : 1800,
+            'Carga Horaria': 360,
+            'Turmas' : ["A", "C"]
+        },
+        'ADS': {
+            'Preco' : 800,
+            'Carga Horaria': 180,
+            'Turmas' : ["A", "B", "C"]
+        },
+        'ENFERMAGEM': {
+            'Preco' : 2100,
+            'Carga Horaria': 580,
+            'Turmas' : ["A", "B"]
+        }
+    }
 
-    def __init__(self, preco, cargaHoraria):
+    def __init__(self,nome, preco, cargaHoraria,turmas):
+        self.nome = nome
         self.preco = preco
         self.cargaHoraria = cargaHoraria
-        #listas para receber turmas associadas e cursos da instituição
-        self.turmaAssociada = []
+        self.turmas = turmas
+
+    def criarCurso(self):
+        Curso.listaCursos.append(self.nome)
+        Curso.informacoesCursos[self.nome] = {
+            'Preco': self.preco,
+            'Carga Horaria': self.cargaHoraria,
+            'Turmas': self.turmas
+            }
+        
         
     @staticmethod #serve para mostrar que o método faz parte da classe, mas não precisa de nenhuma instância
     def mostrarCursos():
@@ -46,6 +73,13 @@ class Curso():
         for curso in Curso.listaCursos:
             if cursoDesejado == curso:
                 return True
+            
+    def mostrarInfoCurso(cursoDesejado):
+        if cursoDesejado in Curso.informacoesCursos:
+            for chave, valor in Curso.informacoesCursos[cursoDesejado].items():
+                print(f"{chave} - {valor}")
+        else:
+            print("Curso não encontrado!")
 
 
 class Turma():
@@ -82,10 +116,24 @@ class Matricula():
         ano = "2025"
         alunoNome = input("Nome: ")
         telefone = input("Número Telefone: ")
-        cpf = input("CPF: ")
+
+        while True: #Laço para capturar erros do cpf
+            cpf = input("CPF (Somente Números): ")
+
+            if not cpf.isdigit():
+                print("O cpf deve conter apenas números!")
+                continue
+            
+            if len(cpf) != 11:
+                print("O CPF deve conter 11 números!")
+                continue
+
+            break
+
         Curso.mostrarCursos()
         curso =  input("Curso: ").upper()
-        while Curso.percorrerCursos(curso) != True:
+
+        while Curso.percorrerCursos(curso) != True: #Laço para capturar erros do campo 'curso'
             Curso.mostrarCursos()
             curso = input("Curso Inexistente ou Inválido, Escolha um da presente lista: ").upper()
 
@@ -101,7 +149,13 @@ class Matricula():
         print("Aluno Matriculado com sucesso!")
     
 
-sistema = Matricula()
+'''sistema = Matricula()
 sistema.matricularAluno()
 for aluno in sistema.matriculas:
-    print(aluno)
+    print(aluno)'''
+Curso.mostrarInfoCurso('CC')
+
+curso01 = Curso("Natação", 890.99, 480, ["A - Manhã, B - Tarde, C - Noite"])
+curso01.criarCurso()
+Curso.mostrarCursos()
+Curso.mostrarInfoCurso("Natação")

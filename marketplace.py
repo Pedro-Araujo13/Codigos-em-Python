@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+import time
+import os
 class Usuario(ABC): #Classe Abstrata de Usuário
     def __init__(self, nome, cpf, telefone):
         self.nome = nome
@@ -34,6 +36,7 @@ class Organizador(Usuario):
 
     def cadastrarTurma(self):
         turmasList = []
+        Curso.mostrarCursos()
         curso = input("Deseja cadastrar turmas em qual curso?: ").upper()
         while Curso.percorrerCursos(curso) != True:
             curso = input("Curso Inexistente. Insira um curso válido: ").upper()
@@ -57,38 +60,32 @@ class Instrutor(Usuario):
   
 
 class Curso():
-    listaCursos = ["CC", "ADS", "ENFERMAGEM"] #a lsita precisa ser declarada aqui pois do contrário, seria considerada uma instância da Classe, coisa q não é
+    listaCursos = ["CC"] #a lsita precisa ser declarada aqui pois do contrário, seria considerada uma instância da Classe, coisa q não é
     
     informacoesCursos = {
         'CC': { 
             'Preco' : 1800,
             'Carga Horaria': 360,
-            'Turmas' : ["A", "C"]
-        },
-        'ADS': {
-            'Preco' : 800,
-            'Carga Horaria': 180,
-            'Turmas' : ["A", "B", "C"]
-        },
-        'ENFERMAGEM': {
-            'Preco' : 2100,
-            'Carga Horaria': 580,
-            'Turmas' : ["A", "B"]
+            'Turmas' : {
+                'A' : [],
+                'B' : []
+            }
         }
-    }
+        }
 
     def __init__(self,nome, preco, cargaHoraria,turmas):
         self.nome = nome
         self.preco = preco
         self.cargaHoraria = cargaHoraria
-        self.turmas = turmas
-
+        self.turmas = {turma: [] for turma in turmas}
     def criarCurso(self):
         Curso.listaCursos.append(self.nome)
         Curso.informacoesCursos[self.nome] = {
             'Preco': self.preco,
             'Carga Horaria': self.cargaHoraria,
-            'Turmas': self.turmas
+            'Turmas': 
+                self.turmas2
+        
             }
         
         
@@ -107,37 +104,84 @@ class Curso():
                 print(f"{chave} - {valor}")
         else:
             print("Curso não encontrado!")
-        
+    def mostrarInfoGeral():
+        for chave, valor in Curso.informacoesCursos.items():
+            print(f"{chave} - {valor}")
+
     def mostrarTurmas(cursoDesejado):
         return Curso.informacoesCursos[cursoDesejado]['Turmas']
     
     def cadastrarTurmas(curso, turmas):
-       turmasList = Curso.informacoesCursos[curso]['Turmas']
-       turmasList.extend(turmas)
+       for c in turmas:
+           Curso.informacoesCursos[curso]['Turmas'][c] = []
+
 
 
 class Pagamento():
-    def __init__(self):
+    faturamentoTotal = 0
+    def __init__(self, nome, cpf):
+        self.nome = nome
+        self.cpf = cpf
         self.faturamento = []
-        
-        def processarPagamento(self):
-            print("Processando pagamento!")
-            print("Pagamento Efetuado")
+    def processarPagamento(self):
+        print("Processando pagamento!")
+        print("Pagamento Efetuado")
+    @staticmethod
+    def relatorioFaturamento():
+        print(f"O faturamento atual do MarketPlace Wyden é de R${Pagamento.faturamentoTotal}")
 
 class Pix(Pagamento):
-    def __init__(self, aluno, chavePix):
-        super().__init__(aluno)
-        self.chavePix = chavePix
+    
+    def __init__(self, aluno, cpf):
+        super().__init__(aluno, cpf)
+       
+
+    def processarPagamento(self, sistema):
+        curso = sistema.buscarCPF(self.cpf)  #Se a funçao retorna o curso, eu posso pesquisar o valor do curso pela função e somar na lista self.faturamento lá na função de pagamento
+        print(f"Gerando chave pix...")
+        time.sleep(1)
+        valor = Curso.informacoesCursos[curso]['Preco']
+        print(f"Chave pix: 12345678910 \nValor: {valor}")
+        pagamento = input("Pressione 's' para continuar com pagamento ou 'n' para cancelar: ").lower()
+        if pagamento == 's':
+            Pagamento.faturamentoTotal += valor
+            print(f"Pagamento Efetuado com sucesso!")
+            sistema.cadastrarAlunoTurma(self.cpf)
+            
 
 class CartaoCredito(Pagamento):
-    def __init__(self, aluno, numeroCartao):
-        super().__init__(aluno)
+    def __init__(self, aluno, cpf, numeroCartao):
+        super().__init__(aluno, cpf)
         self.numeroCartao = numeroCartao
+
+    def processarPagamento(self, sistema):
+        curso = sistema.buscarCPF(self.cpf) 
+        time.sleep(1)
+        valor = Curso.informacoesCursos[curso]['Preco']
+        input("Insira o número do cartão: ")
+        print(f"Cobrança chegará em conta em até 24H, Valor: R${valor}")
+        pagamento = input("Pressione 's' para continuar com pagamento ou 'n' para cancelar: ").lower()
+        if pagamento == 's':
+            Pagamento.faturamentoTotal += valor
+            print(f"Pagamento Efetuado com sucesso!")
+            sistema.cadastrarAlunoTurma(self.cpf)
         
 class Boleto(Pagamento):
     def  __init__(self, aluno, cpf):
-        super().__init(aluno)
-        self.cpf = cpf 
+        super().__init(aluno, cpf)
+
+
+    def processarPagamento(self, sistema):
+        curso = sistema.buscarCPF(self.cpf) 
+        time.sleep(1)
+        valor = Curso.informacoesCursos[curso]['Preco']
+        print(f"<link do Boleto> R${valor}")
+        print(f"Você tem até 3 dias úteis para realizar o pagamento do Boleto!")
+        pagamento = input("Pressione 's' para continuar com pagamento ou 'n' para cancelar: ").lower()
+        if pagamento == 's':
+            Pagamento.faturamentoTotal += valor
+            print(f"Pagamento Efetuado com sucesso!")
+            sistema.cadastrarAlunoTurma(self.cpf)
 
 class Matricula():
     def __init__(self):
@@ -185,11 +229,53 @@ class Matricula():
             matricula += cpf[i]
             i+=1
         matricula += ano
-        pagamento = input("Forma Pagamento: Pix, Cartão de Crédito, Boleto: ")
-        novoAluno = Aluno(alunoNome,cpf, telefone, curso, turma, matricula, pagamento)
+        novoAluno = Aluno(alunoNome,cpf, telefone, curso, turma, matricula, None)
         self.matriculas.append(novoAluno)
-        print("Aluno Matriculado com sucesso!")
-
+        pagamentoOption = int(input("Forma Pagamento: \n1-Pix \n2-Cartão de Crédito \n3-Boleto: "))
+        match (pagamentoOption):
+            case 1:
+                pagamento = Pix(alunoNome, cpf)
+                realizarPagamento = input("Deseja realizar pagamento agora? (s/n): ").lower()
+                if realizarPagamento == 's':
+                    pagamento.processarPagamento(self)
+                    print("Aluno matriculado com sucesso!")
+                    time.sleep(2)
+                elif realizarPagamento == 'n':
+                    pagamento = False
+                    print("Aluno Cadastrado com sucesso, pagamento pendente")
+                    time.sleep(2)
+            case 2:
+                numCartao = input("Insira o número do cartão: ")
+                pagamento = CartaoCredito(alunoNome, cpf, numCartao)
+                print(pagamento.cpf)
+                realizarPagamento = input("Deseja realizar pagamento agora? (s/n)").lower()
+                if realizarPagamento == 's':
+                    pagamento.processarPagamento(self)
+                    print("Aluno matriculado com sucesso!")
+                    time.sleep(2)
+                elif realizarPagamento == 'n':
+                    pagamento = False
+                    print("Aluno Cadastrado com sucesso, pagamento pendente")
+                    time.sleep(2)
+            case 3:
+                pagamento = Boleto(alunoNome, cpf)
+                print(pagamento.cpf)
+                realizarPagamento = input("Deseja realizar pagamento agora? (s/n)").lower()
+                if realizarPagamento == 's':
+                    pagamento.processarPagamento(self)
+                    print("Aluno matriculado com sucesso!")
+                    time.sleep(2)
+                    
+                elif realizarPagamento == 'n':
+                    pagamento = False
+                    print("Aluno Cadastrado com sucesso, pagamento pendente")
+                    time.sleep(2)
+                    
+            case _:
+                print("Opção Invália!")
+        
+        novoAluno.pagamento = pagamento
+        
     def cadastrarInstrutor(self):
         instrutorNome = input("Nome do Instrutor: ")
 
@@ -210,7 +296,8 @@ class Matricula():
             Curso.mostrarCursos()
             cursoInstrutor = input("Curso Inexistente ou Inválido, Escolha um da presente lista: ").upper()
 
-        
+        coursesClasses = Curso.mostrarTurmas(cursoInstrutor)
+        print(coursesClasses)
         while True:
             turmaInstrutor = input("Insira qual turma o instrutor vai se vincular: ").upper()
             if turmaInstrutor not in Curso.mostrarTurmas(cursoInstrutor):
@@ -236,7 +323,85 @@ class Matricula():
         telOrganizador = input("Insira o número celular do organizador: ")
 
         novoOrganizador = Organizador(nomeOrganizador, cpfOrganizador, telOrganizador)
-        self.cadastrarOrganizador.append(novoOrganizador)
+        self.matriculasOrganizador.append(novoOrganizador)
+        print("Organizador Cadastrado com sucesso!")
+        time.sleep(2)
 
-sistema = Matricula()
-sebastiao = Organizador("Sebastião", "71065600496", 81989489744)
+    def buscarCPF(self, cpfBuscado): #Buscar o curso de um aluno específico pelo CPF
+        for aluno in self.matriculas:
+            if aluno.cpf == cpfBuscado:
+                
+                return aluno.curso #retorna o curso do determinado aluno
+    def cadastrarAlunoTurma(self, cpfBuscado):
+        for aluno in self.matriculas:
+            if aluno.cpf == cpfBuscado:
+                Curso.informacoesCursos[aluno.curso]['Turmas'][aluno.turma].append(aluno.nome)
+
+
+
+class MenuPrincipal():
+    pass
+   
+    def menuPrincipal():
+        sistema = Matricula()
+        while True:
+            print("### BEM-VINDO AO MARKETPLACE WYDEN ####\n")
+            print("1 - Painel do Aluno. ")
+            print("2 - Painel do Organizador.")
+            print("3 - Listar Cursos e Turmas.")
+            print("4 - Faturamento total. ")
+            print("5 - Cadastrar Instrutor")
+            print("6 - Cadastrar Organizador")
+            print("7 - Encerrar Sistema. ")
+            opcao = int(input("Opcao: "))
+            match (opcao):
+                case 1:
+                    os.system('clear')
+                    sistema.matricularAluno()
+                case 2:
+                    os.system('clear')
+                    if sistema.matriculasOrganizador:
+                        print("### MARKETPLACE WYDEN ###")
+                        print("--- Área do Organizador ---\n")
+                        print("1 - Cadastrar curso ")
+                        print("2 - Cadastrar turma")
+                        print("3 - Sair")
+                        opcao =  int(input("Opcao: "))
+                        match (opcao):
+                            case 1:
+                                os.system('clear')
+                                organizador = sistema.matriculasOrganizador[0]
+                                organizador.criarCurso()
+                            case 2:
+                                os.system('clear')
+                                organizador = sistema.matriculasOrganizador[0]
+                                organizador.cadastrarTurma()
+                            case 3:
+                                os.system('clear')
+                                print("Saindo...")
+                                time.sleep(1)
+                    else:
+                        print("É preciso cadastrar um Organizador primeiro!")
+                case 3:
+                    os.system('clear')
+                    Curso.mostrarInfoGeral()
+                case 4:
+                    os.system('clear')
+                    Pagamento.relatorioFaturamento()
+                case 5:
+                    os.system('clear')
+                    sistema.cadastrarInstrutor()
+                case 6:
+                    os.system('clear')
+                    sistema.cadastrarOrganizador()
+                case 7:
+                    os.system('clear')
+                    print("Saindo do sistema...")
+                    time.sleep(2)
+                    break
+MenuPrincipal.menuPrincipal()      
+            
+                    
+            
+
+
